@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "876248676936",
+    "project_id": "touhou-replay-manager",
+    "storage_bucket": "touhou-replay-manager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876248676936:android:f7e4492793d91e414af67d",
+        "android_client_info": {
+          "package_name": "com.example.touhou_replay_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJ227a14TMsHYbp9WXwD5Q1wHhbYrvaEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
