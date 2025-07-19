@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart'; // Kita akan membuat file ini selanjutnya
+import 'login_page.dart'; // Impor file baru
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const HomePage(), // Halaman utama kita
+      home: const LoginPage(), // Halaman utama kita
     );
   }
 }
