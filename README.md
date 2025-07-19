@@ -5,8 +5,6 @@ This application is built with Flutter and integrates backend services for authe
 
 ---
 
-## English
-
 Week 1 Progress (July 14 - July 19, 2025)
 The first week was focused on building a solid technical foundation for the entire project. This included setting up the development environment, making backend architecture decisions, establishing the initial connection between the app and cloud services, and designing the first user interface.
 
