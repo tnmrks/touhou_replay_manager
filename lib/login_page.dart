@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'register_page.dart'; // Import halaman registrasi jika diperlukan
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -48,7 +49,10 @@ Widget build(BuildContext context) {
           // Tombol untuk pindah ke halaman registrasi
           TextButton(
             onPressed: () {
-              // Fungsi navigasi ke halaman registrasi akan ditambahkan nanti
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RegisterPage()),
+              );
             },
             child: const Text('Belum punya akun? Daftar di sini'),
           )
