@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart'; // Impor file baru
 import 'package:firebase_core/firebase_core.dart';
+import 'package:touhou_replay_manager/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const LoginPage(), // Halaman utama kita
+      home: const AuthWrapper(), // Halaman utama kita
     );
   }
 }
