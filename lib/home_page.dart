@@ -1,10 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'add_replay_page.dart';
+import 'replay_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,8 +29,11 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Daftar Replay akan muncul di sini.'),
+      body: ListView.builder(
+  itemCount: 5, // Kita buat 5 item tiruan
+  itemBuilder: (context, index) {
+    return const ReplayCard();
+  },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
