@@ -20,9 +20,23 @@ UI & Navigation Basics:
 Built a basic page navigation system using Navigator.
 Designed the static UI for the Login page, complete with TextField for input and Button for actions.
 
+Week 2 Progress (July 21 - July 27, 2025)
+This week was dedicated to implementing core application logic. The primary focus was on building a complete user authentication flow from registration to login and logout. We also created the user interface and backend logic for submitting new replay data, and handled a critical security vulnerability.
+
+Key Accomplishments:
+Full Authentication Flow: Implemented user registration using Firebase Authentication's email and password provider. Built the user login functionality to authenticate existing users. Added a logout feature to the main homepage.
+Session Management: Created an AuthWrapper widget that listens to the user's authentication state in real-time. It automatically navigates users to the login screen if they are logged out, or to the home page if they are logged in, providing a seamless user experience.
+Advanced Form Creation: Developed a comprehensive form for submitting new replays, which includes:
+A DropdownButtonFormField for selecting a game title from a predefined list.
+Multiple CheckboxListTile widgets for common conditions (e.g., No Miss, No Bomb).
+Conditional UI to show a text field for "Other" conditions only when its checkbox is ticked.
+Database Integration (Create): Successfully implemented the "Create" part of CRUD. The application can now take user input from the form and save it as a new document in the replays collection in Cloud Firestore.
+Security Best Practices: Identified and resolved a security alert from GitHub regarding a leaked API key. Learned and executed the process of removing sensitive data from the entire Git history using git filter-repo and force-pushing the clean history.
+
 Next Week's Plan:
-Implement Login and Registration functionality using Firebase Authentication.
-Manage user session state (determining if a user is logged in or out).
-Begin building the UI for the main dashboard after a user successfully logs in.
+Read and display the list of saved replays from Firestore on the HomePage.
+Implement file picking (for .rpy and video files) and upload them to Supabase Storage.
+Create a detail page to view the full information for a selected replay.
+Begin implementing the "Update" and "Delete" functionalities for existing replays.
 
 ---
