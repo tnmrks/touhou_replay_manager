@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'register_page.dart';
+import 'package:touhou_replay_manager/register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,28 +10,29 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Deklarasi controller untuk mengambil input teks
+  // 1. Deklarasi controller untuk mengambil input teks
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Fungsi untuk proses login
+  // 2. Fungsi untuk proses login
   Future<void> signIn() async {
     try {
+      // Melakukan proses login dengan Firebase
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // Navigasi setelah login berhasil akan ditangani di sesi berikutnya
+      // Navigasi setelah login berhasil akan ditangani secara otomatis oleh AuthWrapper
     } on FirebaseAuthException catch (e) {
       // Jika terjadi error, cek apakah halaman masih ada sebelum menampilkan SnackBar
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? "Terjadi error.")),
+        SnackBar(content: Text(e.message ?? "Terjadi error yang tidak diketahui.")),
       );
     }
   }
 
-  // Membersihkan controller saat widget tidak lagi digunakan
+  // Membersihkan controller saat widget tidak lagi digunakan untuk mencegah kebocoran memori
   @override
   void dispose() {
     _emailController.dispose();
@@ -50,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             // Kolom input Email
             TextField(
-              controller: _emailController,
+              controller: _emailController, // Menghubungkan controller
               decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
@@ -61,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
 
             // Kolom input Password
             TextField(
-              controller: _passwordController,
+              controller: _passwordController, // Menghubungkan controller
               decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
@@ -74,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: signIn,
+                onPressed: signIn, // Memanggil fungsi signIn saat ditekan
                 child: const Text('Login'),
               ),
             ),

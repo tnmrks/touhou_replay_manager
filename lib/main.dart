@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Impor file baru
+// Impor file baru
 import 'package:firebase_core/firebase_core.dart';
 import 'package:touhou_replay_manager/auth_wrapper.dart';
 
