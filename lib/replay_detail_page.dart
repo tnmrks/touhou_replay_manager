@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:touhou_replay_manager/add_replay_page.dart';
 
-// Ubah menjadi StatefulWidget
 class ReplayDetailPage extends StatefulWidget {
   final String replayId;
 
@@ -12,53 +12,26 @@ class ReplayDetailPage extends StatefulWidget {
 }
 
 class _ReplayDetailPageState extends State<ReplayDetailPage> {
-
-  // --- FUNGSI BARU UNTUK HAPUS DATA ---
-  Future<void> _deleteReplay() async {
-    try {
-      // Hapus dokumen dari Firestore berdasarkan ID-nya
-      await FirebaseFirestore.instance.collection('replays').doc(widget.replayId).delete();
-
-      // Kembali ke halaman sebelumnya setelah berhasil menghapus
-      if (!mounted) return;
-      Navigator.pop(context);
-
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus replay: $e')),
-      );
-    }
-  }
-  
-  // --- FUNGSI BARU UNTUK MENAMPILKAN DIALOG KONFIRMASI ---
+  // Fungsi untuk menampilkan dialog konfirmasi hapus
   Future<void> _showDeleteConfirmationDialog() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User harus menekan tombol
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Konfirmasi Hapus'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Apakah Anda yakin ingin menghapus replay ini?'),
-                Text('Tindakan ini tidak dapat dibatalkan.'),
-              ],
-            ),
-          ),
+          content: const Text('Apakah Anda yakin ingin menghapus replay ini? Tindakan ini tidak dapat dibatalkan.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Batal'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop(); // Tutup dialog
               },
             ),
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Hapus'),
               onPressed: () {
-                Navigator.of(context).pop(); // Tutup dialog dulu
+                Navigator.of(dialogContext).pop(); // Tutup dialog dulu
                 _deleteReplay(); // Jalankan fungsi hapus
               },
             ),
@@ -68,21 +41,38 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
     );
   }
 
-  // Widget kecil untuk menampilkan detail dengan ikon (tidak berubah)
-  Widget detailRow(IconData icon, String label, String value) {
-    // ... (kode ini sama seperti sebelumnya, tidak perlu diubah) ...
+  // Fungsi untuk menghapus data dari Firestore
+  Future<void> _deleteReplay() async {
+    try {
+      await FirebaseFirestore.instance.collection('replays').doc(widget.replayId).delete();
+      if (!mounted) return;
+      Navigator.pop(context); // Kembali ke halaman utama setelah berhasil menghapus
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus replay: $e')),
+      );
+    }
+  }
+
+  // Widget kecil untuk menampilkan baris detail
+  Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.grey[600]),
+          Icon(icon, color: Colors.grey[700], size: 20),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.grey)),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 16)),
+              ],
+            ),
           ),
         ],
       ),
@@ -91,59 +81,92 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Replay'),
-        // --- TAMBAHKAN TOMBOL HAPUS DI SINI ---
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Hapus Replay',
-            onPressed: _showDeleteConfirmationDialog, // Panggil dialog konfirmasi
+    // FutureBuilder menjadi widget utama yang akan membangun seluruh halaman
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('replays').doc(widget.replayId).get(),
+      builder: (context, snapshot) {
+        // --- KONDISI 1: Sedang Memuat Data ---
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Memuat Replay...')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // --- KONDISI 2: Error atau Data Tidak Ditemukan ---
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Data replay tidak ditemukan.')),
+          );
+        }
+
+        // --- KONDISI 3: Data Berhasil Dimuat ---
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(data['game_title'] ?? 'Detail Replay'),
+            actions: [
+              // Tombol Edit
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit Replay',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddReplayPage(
+                        documentId: widget.replayId,
+                        initialData: data,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // Tombol Hapus
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: 'Hapus Replay',
+                onPressed: _showDeleteConfirmationDialog,
+              ),
+            ],
           ),
-        ],
-      ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('replays').doc(widget.replayId).get(),
-        builder: (context, snapshot) {
-          // ... (sisa kode FutureBuilder tidak berubah) ...
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('Data replay tidak ditemukan.'));
-          }
-
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-
-          return ListView(
+          body: ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
-              detailRow(Icons.games, 'Game', data['game_title'] ?? 'N/A'),
-              detailRow(Icons.score, 'Score', (data['score'] ?? 0).toString()),
-              detailRow(Icons.person, 'Character', data['character'] ?? 'N/A'),
-              const Divider(height: 32),
+              _detailRow(Icons.score, 'Score', (data['score'] ?? 0).toString()),
+              _detailRow(Icons.person, 'Character', data['character'] ?? 'N/A'),
+              const Divider(height: 32, thickness: 1),
               Wrap(
                 spacing: 8.0,
                 runSpacing: 4.0,
                 children: [
-                  if (data['is_clear'] == true) const Chip(label: Text('Clear')),
-                  if (data['no_miss'] == true) const Chip(label: Text('No Miss')),
-                  if (data['no_bomb'] == true) const Chip(label: Text('No Bomb')),
-                  if (data['all_spells'] == true) const Chip(label: Text('All Spells Captured')),
-                  if (data['is_perfect'] == true) const Chip(label: Text('Perfect')),
+                  if (data['is_clear'] == true) const Chip(label: Text('Clear'), backgroundColor: Colors.greenAccent),
+                  if (data['no_miss'] == true) const Chip(label: Text('No Miss'), backgroundColor: Colors.lightBlueAccent),
+                  if (data['no_bomb'] == true) const Chip(label: Text('No Bomb'), backgroundColor: Colors.orangeAccent),
+                  if (data['all_spells'] == true) const Chip(label: Text('All Spells Captured'), backgroundColor: Colors.purpleAccent),
+                  if (data['is_perfect'] == true) const Chip(label: Text('Perfect'), backgroundColor: Colors.amberAccent),
                 ],
               ),
               if ((data['others'] as String?)?.isNotEmpty ?? false) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Text('Catatan Lain:', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                Text(data['others']),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(data['others']),
+                ),
               ]
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
