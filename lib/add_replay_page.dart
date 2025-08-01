@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AddReplayPage extends StatefulWidget {
-  // Tambahkan variabel untuk menerima data saat mode edit
   final String? documentId;
   final Map<String, dynamic>? initialData;
 
@@ -42,7 +41,6 @@ class _AddReplayPageState extends State<AddReplayPage> {
   @override
   void initState() {
     super.initState();
-    // Jika ada data awal (mode edit), isi form dengan data tersebut
     if (widget.initialData != null) {
       final data = widget.initialData!;
       _selectedGame = data['game_title'];
@@ -53,16 +51,53 @@ class _AddReplayPageState extends State<AddReplayPage> {
       _noBomb = data['no_bomb'] ?? false;
       _allSpells = data['all_spells'] ?? false;
       _isPerfect = data['is_perfect'] ?? false;
-      _showOthersField = (data['others'] as String?)?.isNotEmpty ?? false;
+      _showOthersField = data['show_others'] ?? false;
       _othersController.text = data['others'] ?? '';
     }
   }
 
-  // Logika simpan akan kita perbaiki besok agar bisa handle update
   Future<void> saveReplay() async {
-    // ... (kode ini akan kita modifikasi besok) ...
+    if (_selectedGame == null || _scoreController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Judul Gim dan Skor tidak boleh kosong!')),
+      );
+      return;
+    }
+
+    final replayData = {
+      'game_title': _selectedGame,
+      'score': int.tryParse(_scoreController.text) ?? 0,
+      'character': _characterController.text,
+      'timestamp': FieldValue.serverTimestamp(),
+      'is_clear': _isClear,
+      'no_miss': _noMiss,
+      'no_bomb': _noBomb,
+      'all_spells': _allSpells,
+      'is_perfect': _isPerfect,
+      'others': _showOthersField ? _othersController.text.trim() : '',
+      'show_others': _showOthersField,
+    };
+
+    try {
+      if (widget.documentId == null) {
+        await FirebaseFirestore.instance.collection('replays').add(replayData);
+      } else {
+        await FirebaseFirestore.instance
+            .collection('replays')
+            .doc(widget.documentId)
+            .update(replayData);
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan data: $e')),
+      );
+    }
   }
-  
+
   @override
   void dispose() {
     _scoreController.dispose();
@@ -75,7 +110,6 @@ class _AddReplayPageState extends State<AddReplayPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Judul berubah tergantung mode (tambah/edit)
         title: Text(widget.documentId == null ? 'Tambah Replay Baru' : 'Edit Replay'),
         backgroundColor: Colors.blueGrey,
       ),
@@ -125,7 +159,7 @@ class _AddReplayPageState extends State<AddReplayPage> {
             CheckboxListTile(
               title: const Text('All Spell Cards Captured'),
               value: _allSpells,
-              onChanged: (bool? value) => setState(() => _allSpells = value ?? false), // TYPO HERE, should be _allSpells
+              onChanged: (bool? value) => setState(() => _allSpells = value ?? false),
               controlAffinity: ListTileControlAffinity.leading, contentPadding: EdgeInsets.zero,
             ),
             CheckboxListTile(
@@ -156,9 +190,9 @@ class _AddReplayPageState extends State<AddReplayPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: saveReplay,
-                child: const Text('Simpan Replay'),
+                child: Text(widget.documentId == null ? 'Simpan Replay' : 'Update Replay'),
               ),
-            )
+            ),
           ],
         ),
       ),
