@@ -12,7 +12,7 @@ class ReplayDetailPage extends StatefulWidget {
 }
 
 class _ReplayDetailPageState extends State<ReplayDetailPage> {
-  // Fungsi untuk menampilkan dialog konfirmasi hapus
+  // Fungsi untuk menampilkan dialog konfirmasi hapus (tidak berubah)
   Future<void> _showDeleteConfirmationDialog() async {
     return showDialog<void>(
       context: context,
@@ -24,15 +24,15 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
             TextButton(
               child: const Text('Batal'),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Tutup dialog
+                Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Hapus'),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Tutup dialog dulu
-                _deleteReplay(); // Jalankan fungsi hapus
+                Navigator.of(dialogContext).pop();
+                _deleteReplay();
               },
             ),
           ],
@@ -41,12 +41,12 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
     );
   }
 
-  // Fungsi untuk menghapus data dari Firestore
+  // Fungsi untuk menghapus data dari Firestore (tidak berubah)
   Future<void> _deleteReplay() async {
     try {
       await FirebaseFirestore.instance.collection('replays').doc(widget.replayId).delete();
       if (!mounted) return;
-      Navigator.pop(context); // Kembali ke halaman utama setelah berhasil menghapus
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,7 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
     }
   }
 
-  // Widget kecil untuk menampilkan baris detail
+  // Widget kecil untuk menampilkan baris detail (tidak berubah)
   Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -81,11 +81,9 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    // FutureBuilder menjadi widget utama yang akan membangun seluruh halaman
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('replays').doc(widget.replayId).get(),
       builder: (context, snapshot) {
-        // --- KONDISI 1: Sedang Memuat Data ---
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(title: const Text('Memuat Replay...')),
@@ -93,7 +91,6 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
           );
         }
 
-        // --- KONDISI 2: Error atau Data Tidak Ditemukan ---
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return Scaffold(
             appBar: AppBar(title: const Text('Error')),
@@ -101,14 +98,12 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
           );
         }
 
-        // --- KONDISI 3: Data Berhasil Dimuat ---
         final data = snapshot.data!.data() as Map<String, dynamic>;
 
         return Scaffold(
           appBar: AppBar(
             title: Text(data['game_title'] ?? 'Detail Replay'),
             actions: [
-              // Tombol Edit
               IconButton(
                 icon: const Icon(Icons.edit),
                 tooltip: 'Edit Replay',
@@ -124,7 +119,6 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
                   );
                 },
               ),
-              // Tombol Hapus
               IconButton(
                 icon: const Icon(Icons.delete),
                 tooltip: 'Hapus Replay',
@@ -135,8 +129,10 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
           body: ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
+              _detailRow(Icons.games, 'Game', data['game_title'] ?? 'N/A'),
               _detailRow(Icons.score, 'Score', (data['score'] ?? 0).toString()),
               _detailRow(Icons.person, 'Character', data['character'] ?? 'N/A'),
+              _detailRow(Icons.star, 'Difficulty', data['difficulty'] ?? 'N/A'),
               const Divider(height: 32, thickness: 1),
               Wrap(
                 spacing: 8.0,
@@ -162,7 +158,24 @@ class _ReplayDetailPageState extends State<ReplayDetailPage> {
                   ),
                   child: Text(data['others']),
                 ),
+              ],
+              
+              // <-- BAGIAN BARU UNTUK MENAMPILKAN KOMENTAR -->
+              if ((data['comment'] as String?)?.isNotEmpty ?? false) ...[
+                const SizedBox(height: 24),
+                Text('Komentar:', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(data['comment']),
+                ),
               ]
+              // <-- AKHIR DARI BAGIAN BARU -->
             ],
           ),
         );
