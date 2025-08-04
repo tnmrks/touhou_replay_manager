@@ -44,3 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/app/google-services.json
+
+# This file contains sensitive information such as API keys and should not be
+/lib/env.dart
