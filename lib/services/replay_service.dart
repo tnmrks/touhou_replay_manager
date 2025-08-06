@@ -1,5 +1,3 @@
-// File: lib/services/replay_service.dart
-
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,8 +19,11 @@ class ReplayService {
         return "Pengguna tidak login.";
       }
 
-      // 1. Upload file jika ada
+      // 1. Unggah file jika ada
       String? fileUrl;
+      // Cek juga apakah data awal sudah punya URL, jika tidak ada file baru, gunakan yang lama
+      String? existingFileUrl = (replayData['file_url'] as String?);
+
       if (fileToUpload != null) {
         fileUrl = await _storageService.uploadReplayFile(
           file: fileToUpload,
@@ -32,20 +33,21 @@ class ReplayService {
           return "Gagal mengunggah file.";
         }
       }
-      
-      // 2. Tambahkan info pengguna dan URL file ke data
-      replayData['user_id'] = user.uid;
-      if (fileUrl != null) {
-        replayData['file_url'] = fileUrl;
-      }
+
+      // 2. Siapkan data final untuk Firestore
+      final Map<String, dynamic> finalData = {
+        ...replayData, // Salin semua data dari form
+        'userId': user.uid, // <-- INI BAGIAN PENTING YANG DITAMBAHKAN
+        'file_url': fileUrl ?? existingFileUrl, // Gunakan URL baru, atau yang lama jika tidak ada file baru
+      };
 
       // 3. Simpan atau update data di Firestore
       if (documentId == null) {
         // Mode Tambah Baru
-        await _firestore.collection('replays').add(replayData);
+        await _firestore.collection('replays').add(finalData);
       } else {
         // Mode Edit
-        await _firestore.collection('replays').doc(documentId).update(replayData);
+        await _firestore.collection('replays').doc(documentId).update(finalData);
       }
       
       return 'success'; // Mengembalikan string sukses
@@ -53,6 +55,23 @@ class ReplayService {
       return e.message ?? "Terjadi kesalahan Firebase.";
     } catch (e) {
       return e.toString();
+    }
+  }
+
+  // Kita juga bisa pindahkan fungsi hapus ke sini agar lebih terorganisir
+  Future<String?> deleteReplay(String documentId) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return "Pengguna tidak login.";
+      }
+      
+      // TODO: Tambahkan logika untuk menghapus file dari Supabase Storage di sini nanti.
+      
+      await _firestore.collection('replays').doc(documentId).delete();
+      return 'success';
+    } on FirebaseException catch (e) {
+      return e.message ?? "Gagal menghapus replay.";
     }
   }
 }

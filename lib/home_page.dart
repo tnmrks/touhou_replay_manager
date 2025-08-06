@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Pastikan import ini ada
 import 'package:flutter/material.dart';
 import 'package:touhou_replay_manager/add_replay_page.dart';
 import 'package:touhou_replay_manager/replay_card.dart';
@@ -14,6 +14,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
+    // Dapatkan ID pengguna yang sedang login
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Touhou Replay Manager'),
@@ -27,14 +30,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Mengambil data dari koleksi 'replays' di Firestore
-        stream: FirebaseFirestore.instance.collection('replays').snapshots(),
+        // --- PERUBAHAN UTAMA ADA DI SINI ---
+        stream: FirebaseFirestore.instance
+            .collection('replays')
+            .where('userId', isEqualTo: currentUserId) // Filter data berdasarkan userId
+            .snapshots(),
+        // --- AKHIR DARI PERUBAHAN ---
         builder: (context, snapshot) {
-          // Menampilkan indikator loading saat data sedang diambil
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          // Menampilkan pesan jika tidak ada data atau terjadi error
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text('Belum ada replay. Tambahkan satu!'));
           }
@@ -42,20 +47,15 @@ class _HomePageState extends State<HomePage> {
             return const Center(child: Text('Terjadi kesalahan saat memuat data.'));
           }
 
-          // Jika data ada, simpan dalam sebuah variabel
           final replayDocs = snapshot.data!.docs;
 
-          // Bangun daftar menggunakan ListView.builder
           return ListView.builder(
             itemCount: replayDocs.length,
             itemBuilder: (context, index) {
-              // Ambil data dari setiap dokumen
               final doc = replayDocs[index];
               final data = doc.data() as Map<String, dynamic>;
 
-              // Buat ReplayCard dengan data dari Firestore
               return ReplayCard(
-                // KIRIM ID DOKUMEN KE REPLAYCARD
                 documentId: doc.id,
                 gameTitle: data['game_title'] ?? 'Unknown Game',
                 score: data['score'] ?? 0,
